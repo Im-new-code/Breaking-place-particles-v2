@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "breakingplaceparticles",
+  "version": "${version}",
+  "name": "Breaking Place Particles",
+  "description": "Shows shape-aware block particles when a block is placed, and when a hoe/axe/shovel transforms a block in place (tilling, stripping, scraping, flattening).",
+  "authors": [
+    "VoidGlassMC"
+    
+  ],
+  "icon": "icon.png",
+  "contact": {},
+  "license": "CC0-1.0",
+  "environment": "client",
+  "mixins": [
+    "breakingplaceparticles.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "1.17.1",
+    "java": ">=17",
+    "fabricloader": ">=0.16.14"
+  }
+}

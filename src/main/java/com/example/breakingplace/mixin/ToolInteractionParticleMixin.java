@@ -1,5 +1,6 @@
 package com.example.breakingplace.mixin;
 
+import com.example.breakingplace.config.ModConfig;
 import com.example.breakingplace.particle.ParticleSpawnHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -61,6 +62,9 @@ public abstract class ToolInteractionParticleMixin {
 
         ActionResult result = cir.getReturnValue();
         if (result == null || !result.isAccepted() || oldState == null) {
+            return;
+        }
+        if (!ModConfig.get().toolInteractionParticlesEnabled) {
             return;
         }
 

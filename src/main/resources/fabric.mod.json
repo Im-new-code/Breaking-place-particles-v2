@@ -3,7 +3,7 @@
   "id": "breakingplaceparticles",
   "version": "${version}",
   "name": "Breaking Place Particles",
-  "description": "Shows shape-aware block particles when a block is placed, and when a hoe/axe/shovel transforms a block in place (tilling, stripping, scraping, flattening).",
+  "description": "Shape-aware, material-aware block particles for placing, breaking, and hoe/axe/shovel transformations - a 1.17.1-compatible take on Particle Interactions.",
   "authors": [
     "VoidGlassMC"
     

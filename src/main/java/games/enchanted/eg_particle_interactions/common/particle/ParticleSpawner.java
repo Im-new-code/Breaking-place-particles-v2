@@ -32,10 +32,7 @@ public final class ParticleSpawner {
         double centerY = (bounds.minY + bounds.maxY) * 0.5;
         double centerZ = (bounds.minZ + bounds.maxZ) * 0.5;
         Random random = world.random;
-        int density = placementDensity(state);
-        if (config.performanceMode) density = Math.min(density, 2);
-        density = MathHelper.clamp(density, 1, 4);
-        final int particlesPerEdge = density;
+        final int particlesPerEdge = MathHelper.clamp(placementDensity(state), 1, 4);
         double outwardVelocity = placementVelocity(state);
         final BlockState placedState = state;
         shape.forEachEdge((x1, y1, z1, x2, y2, z2) -> {
@@ -180,15 +177,19 @@ public final class ParticleSpawner {
                 || path.endsWith("_concrete_powder");
     }
     private static int placementDensity(BlockState state) {
+        if (isChain(state) || isHeavyGrassBlade(state) || isSugarCane(state)) return 2;
         if (isRedstone(state) || state.isOf(Blocks.NETHER_PORTAL)) return 3;
         if (isFlowerPetal(state)) return 3;
         return 2;
     }
     private static double placementVelocity(BlockState state) {
-        if (state.isOf(Blocks.NETHER_PORTAL)) return 0.18;
+        if (state.isOf(Blocks.NETHER_PORTAL)) return 0.20;
+        if (isChain(state)) return 0.22;
+        if (isSugarCane(state)) return 0.19;
+        if (isFlowerPetal(state)) return 0.18;
         if (isRedstone(state)) return 0.10;
         if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) return 0.15;
-        if (isGrassBlade(state) || state.isIn(BlockTags.LEAVES)) return 0.13;
+        if (isGrassBlade(state) || isHeavyGrassBlade(state) || state.isIn(BlockTags.LEAVES)) return 0.13;
         if (isDust(Registry.BLOCK.getId(state.getBlock()).getPath())) return 0.10;
         return 0.13;
     }

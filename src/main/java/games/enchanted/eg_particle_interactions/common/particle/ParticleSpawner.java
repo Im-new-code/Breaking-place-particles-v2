@@ -17,6 +17,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -69,7 +70,7 @@ public final class ParticleSpawner {
                 double px = x1 + dx * t;
                 double py = y1 + dy * t;
                 double pz = z1 + dz * t;
-                ParticleEffect effect = placementEffect(stateForParticles, random, config);
+                ParticleEffect effect = placementEffect(world, pos, stateForParticles, random, config);
                 if (effect == null) continue;
 
                 double vx = (px - centerX) * velocityMultiplier + (random.nextDouble() - 0.5) * 0.004;
@@ -189,13 +190,39 @@ public final class ParticleSpawner {
         return state == null || state.isAir() ? ParticleTypes.SMOKE : basePlacementEffect(state, ConfigOptions.get());
     }
 
-    private static ParticleEffect placementEffect(BlockState state, Random random, ConfigOptions.Settings config) {
-        // Upstream deliberately mixes in a small number of dirt flecks when grass blocks/path are placed.
-        if ((state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH))
-                && random.nextFloat() > 0.70F && config.blockPlacement) {
+    private static ParticleEffect placementEffect(World world, BlockPos pos, BlockState state,
+                                                  Random random, ConfigOptions.Settings config) {
+        boolean snowBlock = state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW);
+        if (snowBlock && config.snowflakeSteamInWarmPlaces && isWarmBiome(world, pos) && random.nextInt(5) == 0) {
+            return ParticleTypes.POOF;
+        }
+
+        boolean grassLike = isGrassBlade(state);
+        boolean spawnFirefly = grassLike && config.swampFireflies
+                && world.getLightLevel(pos) <= 13
+                && world.getBiome(pos).getCategory() == Biome.Category.SWAMP
+                && random.nextFloat() > 0.9F;
+        boolean spawnDirt = (state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH))
+                && random.nextFloat() > 0.70F;
+
+        // Match upstream priority: grass-block dirt flecks take precedence over swamp fireflies.
+        if (spawnDirt) {
             return new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.DIRT.getDefaultState());
         }
+        if (spawnFirefly) {
+            // Minecraft 1.17.1 has no native FIREFLY particle type, so use a small End Rod as the visual.
+            return ParticleTypes.END_ROD;
+        }
         return basePlacementEffect(state, config);
+    }
+
+    private static boolean isWarmBiome(World world, BlockPos pos) {
+        Biome.Category category = world.getBiome(pos).getCategory();
+        return category == Biome.Category.DESERT
+                || category == Biome.Category.JUNGLE
+                || category == Biome.Category.SAVANNA
+                || category == Biome.Category.MESA
+                || category == Biome.Category.NETHER;
     }
 
     private static ParticleEffect basePlacementEffect(BlockState state, ConfigOptions.Settings config) {

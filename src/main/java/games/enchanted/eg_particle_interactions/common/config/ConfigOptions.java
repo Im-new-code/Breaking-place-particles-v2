@@ -41,6 +41,7 @@ public final class ConfigOptions {
         public boolean entityEffects = true;
         public boolean ambientLeaves = true;
         public boolean swampFireflies = true;
+        public boolean snowflakeSteamInWarmPlaces = false;
         public boolean movementParticles = true;
         public boolean performanceMode = true;
         public int particlesPerEvent = 5;

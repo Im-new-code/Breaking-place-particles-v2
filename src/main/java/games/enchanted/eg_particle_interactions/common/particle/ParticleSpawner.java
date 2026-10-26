@@ -55,7 +55,7 @@ public final class ParticleSpawner {
                     double vx = (randomParticle(world) - 0.5) * 0.045;
                     double vz = (randomParticle(world) - 0.5) * 0.045;
                     spawnAt(world,
-                            new BlockStateParticleEffect(PlacementParticleTypes.REDSTONE_DUST, placedState),
+                            new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, placedState),
                             x, y, z, vx, 0.015 + randomParticle(world) * 0.025, vz);
                 }
             }
@@ -250,7 +250,7 @@ public final class ParticleSpawner {
         }
         if (isRedstone(state)) {
             return config.redstoneEffects
-                    ? new BlockStateParticleEffect(PlacementParticleTypes.REDSTONE_DUST, state)
+                    ? new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, state)
                     : new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
         }
         if (isChain(state)) return new BlockStateParticleEffect(PlacementParticleTypes.CHAIN_SNAP, state);

@@ -21,3 +21,5 @@ The GitHub Actions workflow uses Java 16, Gradle 7.3.3, Loom 0.10, Yarn 1.17.1+b
 ## Attribution and licence
 
 Original project by Enchanted-Games: https://github.com/Enchanted-Games/block-place-particles. Original licence: CC BY-NC 4.0. See LICENSE. This adaptation is not endorsed by the original author.
+
+The grass-blade, tinted-dust, moss-clump, and tinted-leaf sprite frames are imported from the upstream Particle Interactions `1.21-v0.4` source assets. Particle JSON texture identifiers are relative to `textures/particle` (for example `eg_particle_interactions:grass_blade/0`), so they must not include an extra `particle/` path segment. The 1.17.1 movement/provider code remains a compatibility implementation, rather than a byte-for-byte port of the modern runtime.

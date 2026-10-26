@@ -54,13 +54,22 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
         }
     }
     private static float size(Kind kind, Random random) {
+        // Match upstream particle scale: 6x6 grass sprites use 0.10-0.12
+        // world units, while the 8x8 tinted dust frames use 0.095-0.125.
         switch (kind) {
-            case HEAVY_GRASS_BLADE: return 0.28F + random.nextFloat() * 0.10F;
-            case GRASS_BLADE: case LEAF: case PETAL: case SUGAR_CANE: return 0.22F + random.nextFloat() * 0.13F;
-            case BLOCK_SHATTER: return 0.25F + random.nextFloat() * 0.12F;
-            case CHAIN_SNAP: return 0.16F + random.nextFloat() * 0.08F;
-            case TINTED_DUST: return 0.18F + random.nextFloat() * 0.12F;
-            default: return 0.21F + random.nextFloat() * 0.11F;
+            case HEAVY_GRASS_BLADE:
+            case GRASS_BLADE: case LEAF: case PETAL: case SUGAR_CANE:
+                return 0.50F + random.nextFloat() * 0.10F;
+            case MOSS_CLUMP:
+                return 0.40F + random.nextFloat() * 0.20F;
+            case TINTED_DUST: case REDSTONE_DUST:
+                return 0.475F + random.nextFloat() * 0.15F;
+            case BLOCK_SHATTER:
+                return 0.25F + random.nextFloat() * 0.12F;
+            case CHAIN_SNAP:
+                return 0.16F + random.nextFloat() * 0.08F;
+            default:
+                return 0.21F + random.nextFloat() * 0.11F;
         }
     }
     private static float gravity(Kind kind) {
@@ -108,8 +117,12 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
                 if (path.contains("allium")) return 0xB184DE;
                 if (path.contains("azure_bluet") || path.contains("oxeye_daisy")) return 0xE9E7D9;
                 return 0xEFA1C4;
-            case MOSS_CLUMP: return 0x79A94B;
-            case TINTED_DUST: return dustColor(path);
+            case MOSS_CLUMP: return 0xFFFFFF;
+            case TINTED_DUST:
+                // Upstream Redstone Dust is the colour-tinted dust particle,
+                // coloured from the block state/texture, not a separate sprite.
+                if (path.contains("redstone") || path.equals("repeater") || path.equals("comparator")) return 0xB52A24;
+                return dustColor(path);
             case REDSTONE_DUST: return 0xF13C35;
             case CHAIN_SNAP: return 0xB8B9B5;
             case BLOCK_SHATTER: return 0xA95AE4;

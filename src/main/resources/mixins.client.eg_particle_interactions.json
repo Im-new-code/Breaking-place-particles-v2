@@ -17,6 +17,7 @@
     "blocks.BlastFurnaceBlockMixin",
     "blocks.SmokerBlockMixin",
     "blocks.RedstoneWireBlockMixin",
+    "interaction.RedstonePlacementMixin",
     "entity.AbstractMinecartEntityMixin",
     "entity.BlazeEntityMixin",
     "entity.FallingBlockEntityMixin",

@@ -266,9 +266,13 @@ public final class ParticleSpawner {
         }
     }
 
+    /**
+     * The custom dust sprite is only appropriate for redstone wire/dust.
+     * Solid redstone blocks and devices must use vanilla block-state particles
+     * so their particles sample the real block model textures.
+     */
     private static boolean isRedstone(BlockState state) {
-        return state.isOf(Blocks.REDSTONE_BLOCK) || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.REPEATER)
-                || state.isOf(Blocks.COMPARATOR) || state.isOf(Blocks.REDSTONE_TORCH) || state.isOf(Blocks.REDSTONE_WALL_TORCH);
+        return state.isOf(Blocks.REDSTONE_WIRE);
     }
 
     private static boolean isChain(BlockState state) { return state.isOf(Blocks.CHAIN); }
@@ -286,14 +290,18 @@ public final class ParticleSpawner {
                 || state.isOf(Blocks.CAVE_VINES) || state.isOf(Blocks.CAVE_VINES_PLANT);
     }
 
+    /**
+     * Use the grass-blade sprite only for actual plants. Full block faces
+     * such as grass blocks, dirt paths, and hay bales use vanilla model-textured
+     * block particles instead of being mistaken for a grass blade.
+     */
     private static boolean isGrassBlade(BlockState state) {
-        return state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH) || state.isOf(Blocks.GRASS)
-                || state.isOf(Blocks.TALL_GRASS) || state.isOf(Blocks.FERN) || state.isOf(Blocks.LARGE_FERN)
+        return state.isOf(Blocks.GRASS) || state.isOf(Blocks.TALL_GRASS)
+                || state.isOf(Blocks.FERN) || state.isOf(Blocks.LARGE_FERN)
                 || state.isOf(Blocks.VINE) || state.isOf(Blocks.SWEET_BERRY_BUSH) || state.isOf(Blocks.DEAD_BUSH)
                 || state.isOf(Blocks.SEAGRASS) || state.isOf(Blocks.TALL_SEAGRASS) || state.isOf(Blocks.GLOW_LICHEN)
                 || state.isOf(Blocks.WHEAT) || state.isOf(Blocks.CARROTS) || state.isOf(Blocks.POTATOES)
-                || state.isOf(Blocks.BEETROOTS) || state.isOf(Blocks.MELON_STEM) || state.isOf(Blocks.PUMPKIN_STEM)
-                || state.isOf(Blocks.HAY_BLOCK);
+                || state.isOf(Blocks.BEETROOTS) || state.isOf(Blocks.MELON_STEM) || state.isOf(Blocks.PUMPKIN_STEM);
     }
 
     private static boolean isDust(String path) {

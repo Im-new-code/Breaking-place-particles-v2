@@ -36,7 +36,7 @@ public final class AmbientParticleTicker {
             BlockPos sample = playerPos.add(random.nextInt(17) - 8, random.nextInt(9) - 4, random.nextInt(17) - 8);
             BlockState state = world.getBlockState(sample);
             if (config.ambientLeaves && state.isIn(BlockTags.LEAVES) && random.nextInt(45) == 0) {
-                ParticleSpawner.spawnAt(world, ParticleTypes.FALLING_SPORE_BLOSSOM,
+                ParticleSpawner.spawnAt(world, ParticleTypes.COMPOSTER,
                         sample.getX() + random.nextDouble(), sample.getY() + 0.15D + random.nextDouble() * 0.4D,
                         sample.getZ() + random.nextDouble(), (random.nextDouble() - 0.5D) * 0.015D,
                         -0.003D, (random.nextDouble() - 0.5D) * 0.015D);

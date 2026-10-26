@@ -146,7 +146,7 @@ public final class ParticleSpawner {
 
     public static ParticleEffect visualFor(BlockState state) {
         if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) return ParticleTypes.SNOWFLAKE;
-        if (state.isIn(BlockTags.LEAVES)) return ParticleTypes.FALLING_SPORE_BLOSSOM;
+        if (state.isIn(BlockTags.LEAVES)) return ParticleTypes.COMPOSTER;
         if (state.isOf(Blocks.MOSS_BLOCK) || state.isOf(Blocks.MOSS_CARPET) || state.getBlock() instanceof FlowerBlock
                 || state.isOf(Blocks.GRASS) || state.isOf(Blocks.TALL_GRASS) || state.isOf(Blocks.FERN) || state.isOf(Blocks.LARGE_FERN)) {
             return ParticleTypes.COMPOSTER;

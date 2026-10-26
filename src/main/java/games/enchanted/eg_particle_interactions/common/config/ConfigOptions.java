@@ -1,5 +1,4 @@
 package games.enchanted.eg_particle_interactions.common.config;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -8,7 +7,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 public final class ConfigOptions {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("particle_interactions.json");
@@ -35,7 +33,7 @@ public final class ConfigOptions {
     public static final class Settings {
         public boolean enabled = true;
         public boolean blockPlacement = true;
-        public boolean blockBreaking = true;
+        public boolean blockBreaking = false;
         public boolean toolInteractions = true;
         public boolean fireAndFurnaces = true;
         public boolean redstoneEffects = true;

@@ -12,6 +12,7 @@
   "license": "CC-BY-NC-4.0",
   "environment": "client",
   "entrypoints": {
+    "main": ["games.enchanted.eg_particle_interactions.fabric.FabricCommonEntry"],
     "client": ["games.enchanted.eg_particle_interactions.fabric.FabricClientEntry"]
   },
   "mixins": ["mixins.client.eg_particle_interactions.json"],

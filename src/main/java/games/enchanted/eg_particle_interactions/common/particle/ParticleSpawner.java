@@ -211,10 +211,12 @@ public final class ParticleSpawner {
 
     /** Custom tinted-dust burst when a redstone control is successfully used. */
     public static void redstoneInteraction(World world, BlockPos pos, BlockState state, Vec3d hit, Direction face) {
-        if (!enabled(world, false) || state == null || state.isAir() || hit == null || face == null) return;
+        ConfigOptions.Settings config = ConfigOptions.get();
+        if (world == null || !world.isClient || !config.enabled || !config.redstoneEffects
+                || state == null || state.isAir() || hit == null || face == null) return;
         Random random = world.random;
         ParticleEffect dust = new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, state);
-        for (int i = 0; i < count(ConfigOptions.get(), 4); i++) {
+        for (int i = 0; i < count(config, 4); i++) {
             double offsetX = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetX()));
             double offsetY = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetY()));
             double offsetZ = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetZ()));

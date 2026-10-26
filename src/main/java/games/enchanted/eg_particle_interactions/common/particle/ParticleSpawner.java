@@ -43,7 +43,24 @@ public final class ParticleSpawner {
         }
 
         VoxelShape shape = placedState.getOutlineShape(world, pos, ShapeContext.absent());
-        if (shape == null || shape.isEmpty()) return;
+        if (shape == null || shape.isEmpty()) {
+            // Redstone wire can expose a degenerate outline on some states and
+            // renderers. Still emit its custom sprite instead of silently
+            // dropping the effect when the edge sampler has no geometry.
+            if (isRedstone(placedState) && config.redstoneEffects) {
+                for (int i = 0; i < count(config, 4); i++) {
+                    double x = pos.getX() + 0.18 + randomParticle(world) * 0.64;
+                    double z = pos.getZ() + 0.18 + randomParticle(world) * 0.64;
+                    double y = pos.getY() + 0.025 + randomParticle(world) * 0.035;
+                    double vx = (randomParticle(world) - 0.5) * 0.045;
+                    double vz = (randomParticle(world) - 0.5) * 0.045;
+                    spawnAt(world,
+                            new BlockStateParticleEffect(PlacementParticleTypes.REDSTONE_DUST, placedState),
+                            x, y, z, vx, 0.015 + randomParticle(world) * 0.025, vz);
+                }
+            }
+            return;
+        }
 
         Box bounds = shape.getBoundingBox();
         double centerX = (bounds.minX + bounds.maxX) * 0.5;
@@ -202,13 +219,6 @@ public final class ParticleSpawner {
                 && world.getLightLevel(pos) <= 13
                 && world.getBiome(pos).getCategory() == Biome.Category.SWAMP
                 && random.nextFloat() > 0.9F;
-        boolean spawnDirt = (state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH))
-                && random.nextFloat() > 0.70F;
-
-        // Match upstream priority: grass-block dirt flecks take precedence over swamp fireflies.
-        if (spawnDirt) {
-            return new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.DIRT.getDefaultState());
-        }
         if (spawnFirefly) {
             // Minecraft 1.17.1 has no native FIREFLY particle type, so use a small End Rod as the visual.
             return ParticleTypes.END_ROD;
@@ -347,6 +357,10 @@ public final class ParticleSpawner {
                         (random.nextDouble() - 0.5) * 0.025);
             }
         }
+    }
+
+    private static double randomParticle(World world) {
+        return world.random.nextDouble();
     }
 
     private static int count(ConfigOptions.Settings config, int fallback) {

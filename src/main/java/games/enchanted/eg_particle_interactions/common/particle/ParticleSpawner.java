@@ -25,6 +25,10 @@ public final class ParticleSpawner {
         if (!config.enabled || !config.blockPlacement) return;
         BlockState state = world.getBlockState(pos);
         if (state.isAir()) state = requestedState;
+        if (state.getMaterial().isLiquid()) {
+            if (config.fluidEffects) spawnFluidPlacementEffects(world, pos, state);
+            return;
+        }
         VoxelShape shape = state.getOutlineShape(world, pos, ShapeContext.absent());
         if (shape == null || shape.isEmpty()) return;
         Box bounds = shape.getBoundingBox();
@@ -51,7 +55,12 @@ public final class ParticleSpawner {
                 spawnAt(world, effect, pos.getX() + px, pos.getY() + py, pos.getZ() + pz, vx, vy, vz);
             }
         });
-        if (config.fluidEffects && state.getMaterial().isLiquid()) spawnFluidPlacementEffects(world, pos, state);
+    }
+    public static void fluidPlaced(World world, BlockPos pos, BlockState state) {
+        if (world == null || !world.isClient || state == null || !state.getMaterial().isLiquid()) return;
+        ConfigOptions.Settings config = ConfigOptions.get();
+        if (config.enabled && config.blockPlacement && config.fluidEffects)
+            spawnFluidPlacementEffects(world, pos, state);
     }
     public static void broken(ClientWorld world, BlockPos pos, BlockState state) {
         // Vanilla-only until the full break override pipeline is implemented.
@@ -128,9 +137,8 @@ public final class ParticleSpawner {
         return basePlacementEffect(state);
     }
     private static ParticleEffect placementEffect(BlockState state, Random random) {
-        if ((state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH)) && random.nextFloat() > 0.70F) {
+        if ((state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH)) && random.nextFloat() > 0.70F)
             return new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.DIRT.getDefaultState());
-        }
         return basePlacementEffect(state);
     }
     private static ParticleEffect basePlacementEffect(BlockState state) {

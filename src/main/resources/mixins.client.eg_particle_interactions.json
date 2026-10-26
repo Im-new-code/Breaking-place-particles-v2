@@ -6,6 +6,7 @@
   "refmap": "eg_particle_interactions.refmap.json",
   "client": [
     "items.BlockItemMixin",
+    "items.RedstoneItemMixin",
     "items.HoeItemMixin",
     "items.AxeItemMixin",
     "items.ShovelItemMixin",

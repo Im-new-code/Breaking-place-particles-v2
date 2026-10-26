@@ -12,11 +12,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BlockItem.class)
 public abstract class BlockItemMixin {
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;Lnet/minecraft/block/BlockState;)Z", at = @At("RETURN"))
-    private void egpi$place(ItemPlacementContext context, BlockState state, CallbackInfoReturnable<Boolean> cir) {
+    private void egpi$place(ItemPlacementContext context, BlockState requestedState, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) {
             World world = context.getWorld();
             BlockPos pos = context.getBlockPos();
-            ParticleSpawner.placed(world, pos, state);
+            BlockState placedState = world.getBlockState(pos);
+            if (placedState.isAir()) placedState = requestedState;
+            ParticleSpawner.placed(world, pos, placedState);
         }
     }
 }

@@ -12,7 +12,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import java.util.Random;
 public final class PlacementSpriteParticle extends SpriteBillboardParticle {
-    public enum Kind { SNOWFLAKE, LEAF, PETAL, GRASS_BLADE, MOSS_CLUMP, TINTED_DUST, REDSTONE_DUST, BLOCK_SHATTER }
+    public enum Kind { SNOWFLAKE, LEAF, PETAL, GRASS_BLADE, HEAVY_GRASS_BLADE, SUGAR_CANE, CHAIN_SNAP, MOSS_CLUMP, TINTED_DUST, REDSTONE_DUST, BLOCK_SHATTER }
     private final Kind kind;
     private final float spin;
     public PlacementSpriteParticle(ClientWorld world, double x, double y, double z, double velocityX, double velocityY, double velocityZ,
@@ -29,7 +29,7 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
         this.spin = spin(kind) * (this.random.nextBoolean() ? 1.0F : -1.0F);
         int color = colorFor(state, world, x, y, z, kind);
         setColor(((color >> 16) & 255) / 255.0F, ((color >> 8) & 255) / 255.0F, (color & 255) / 255.0F);
-        if (kind == Kind.LEAF || kind == Kind.PETAL || kind == Kind.GRASS_BLADE) {
+        if (kind == Kind.LEAF || kind == Kind.PETAL || kind == Kind.GRASS_BLADE || kind == Kind.SUGAR_CANE) {
             this.velocityY += 0.006 + this.random.nextDouble() * 0.012;
         }
         this.velocityX += (this.random.nextDouble() - 0.5) * 0.006;
@@ -43,19 +43,22 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
         this.angle = previousAngle + this.spin;
         this.velocityX *= 0.96;
         this.velocityZ *= 0.96;
-        if (this.kind == Kind.LEAF || this.kind == Kind.PETAL || this.kind == Kind.GRASS_BLADE) this.velocityY = Math.max(this.velocityY, -0.045);
+        if (this.kind == Kind.LEAF || this.kind == Kind.PETAL || this.kind == Kind.GRASS_BLADE || this.kind == Kind.SUGAR_CANE)
+            this.velocityY = Math.max(this.velocityY, -0.045);
     }
     private static int lifetime(Kind kind, Random random) {
         switch (kind) {
-            case LEAF: case PETAL: case GRASS_BLADE: return 12 + random.nextInt(7);
-            case BLOCK_SHATTER: return 8 + random.nextInt(4);
+            case LEAF: case PETAL: case GRASS_BLADE: case HEAVY_GRASS_BLADE: case SUGAR_CANE: return 12 + random.nextInt(7);
+            case BLOCK_SHATTER: case CHAIN_SNAP: return 8 + random.nextInt(4);
             default: return 9 + random.nextInt(5);
         }
     }
     private static float size(Kind kind, Random random) {
         switch (kind) {
-            case GRASS_BLADE: case LEAF: case PETAL: return 0.22F + random.nextFloat() * 0.13F;
+            case HEAVY_GRASS_BLADE: return 0.28F + random.nextFloat() * 0.10F;
+            case GRASS_BLADE: case LEAF: case PETAL: case SUGAR_CANE: return 0.22F + random.nextFloat() * 0.13F;
             case BLOCK_SHATTER: return 0.25F + random.nextFloat() * 0.12F;
+            case CHAIN_SNAP: return 0.16F + random.nextFloat() * 0.08F;
             case TINTED_DUST: return 0.18F + random.nextFloat() * 0.12F;
             default: return 0.21F + random.nextFloat() * 0.11F;
         }
@@ -63,18 +66,19 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
     private static float gravity(Kind kind) {
         switch (kind) {
             case LEAF: case PETAL: return 0.035F;
-            case GRASS_BLADE: return 0.055F;
+            case GRASS_BLADE: case SUGAR_CANE: return 0.055F;
+            case HEAVY_GRASS_BLADE: return 0.085F;
             case SNOWFLAKE: return 0.025F;
             case REDSTONE_DUST: return 0.11F;
-            case BLOCK_SHATTER: return 0.16F;
+            case BLOCK_SHATTER: case CHAIN_SNAP: return 0.16F;
             default: return 0.10F;
         }
     }
     private static float spin(Kind kind) {
         switch (kind) {
             case LEAF: case PETAL: return 0.12F;
-            case GRASS_BLADE: return 0.08F;
-            case BLOCK_SHATTER: return 0.20F;
+            case GRASS_BLADE: case SUGAR_CANE: return 0.08F;
+            case BLOCK_SHATTER: case CHAIN_SNAP: return 0.20F;
             default: return 0.045F;
         }
     }
@@ -84,14 +88,18 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
         switch (kind) {
             case SNOWFLAKE: return 0xE4F5FF;
             case LEAF:
-            case GRASS_BLADE: {
+            case GRASS_BLADE:
+            case HEAVY_GRASS_BLADE:
+            case SUGAR_CANE: {
                 MinecraftClient client = MinecraftClient.getInstance();
                 if (client != null) {
                     BlockColors colors = client.getBlockColors();
                     int tint = colors.getColor(state, world, new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z)), 0);
                     if (tint != -1) return tint;
                 }
-                return kind == Kind.LEAF ? 0x6C9C45 : 0x74B447;
+                if (kind == Kind.LEAF) return 0x6C9C45;
+                if (kind == Kind.HEAVY_GRASS_BLADE) return 0x80A850;
+                return kind == Kind.SUGAR_CANE ? 0x62A64B : 0x74B447;
             }
             case PETAL:
                 if (path.contains("blue_orchid") || path.contains("cornflower")) return 0x6B9AF7;
@@ -103,6 +111,7 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
             case MOSS_CLUMP: return 0x79A94B;
             case TINTED_DUST: return dustColor(path);
             case REDSTONE_DUST: return 0xF13C35;
+            case CHAIN_SNAP: return 0xB8B9B5;
             case BLOCK_SHATTER: return 0xA95AE4;
             default: return 0xFFFFFF;
         }

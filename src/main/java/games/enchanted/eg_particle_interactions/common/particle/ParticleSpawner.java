@@ -19,12 +19,12 @@ import java.util.Random;
 public final class ParticleSpawner {
     public enum ToolAction { TILL, STRIP, FLATTEN, FIRE, BUCKET }
     private ParticleSpawner() {}
-
-    /** Edge-following placement particles, using the state Minecraft is actually placing. */
-    public static void placed(World world, BlockPos pos, BlockState state) {
-        if (world == null || !world.isClient || state == null || state.isAir()) return;
+    public static void placed(World world, BlockPos pos, BlockState requestedState) {
+        if (world == null || !world.isClient || requestedState == null || requestedState.isAir()) return;
         ConfigOptions.Settings config = ConfigOptions.get();
         if (!config.enabled || !config.blockPlacement) return;
+        BlockState state = world.getBlockState(pos);
+        if (state.isAir()) state = requestedState;
         VoxelShape shape = state.getOutlineShape(world, pos, ShapeContext.absent());
         if (shape == null || shape.isEmpty()) return;
         Box bounds = shape.getBoundingBox();
@@ -35,8 +35,9 @@ public final class ParticleSpawner {
         int density = placementDensity(state);
         if (config.performanceMode) density = Math.min(density, 2);
         density = MathHelper.clamp(density, 1, 4);
-        double outwardVelocity = placementVelocity(state);
         final int particlesPerEdge = density;
+        double outwardVelocity = placementVelocity(state);
+        final BlockState placedState = state;
         shape.forEachEdge((x1, y1, z1, x2, y2, z2) -> {
             double dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
             double edgeLength = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
@@ -45,7 +46,7 @@ public final class ParticleSpawner {
             for (int i = 0; i < amount; i++) {
                 double t = (i + 0.5) / amount;
                 double px = x1 + dx * t, py = y1 + dy * t, pz = z1 + dz * t;
-                ParticleEffect effect = placementEffect(state, random);
+                ParticleEffect effect = placementEffect(placedState, random);
                 if (effect == null) continue;
                 double vx = (px - centerX) * outwardVelocity + (random.nextDouble() - 0.5) * 0.004;
                 double vy = (py - centerY) * outwardVelocity + 0.002 + random.nextDouble() * 0.008;
@@ -55,11 +56,9 @@ public final class ParticleSpawner {
         });
         if (config.fluidEffects && state.getMaterial().isLiquid()) spawnFluidPlacementEffects(world, pos, state);
     }
-
     public static void broken(ClientWorld world, BlockPos pos, BlockState state) {
         // Vanilla-only until the full break override pipeline is implemented.
     }
-
     public static void tool(World world, BlockPos pos, BlockState state, ToolAction action) {
         ConfigOptions.Settings config = ConfigOptions.get();
         if (world == null || !world.isClient || !config.enabled || !config.toolInteractions) return;
@@ -138,9 +137,13 @@ public final class ParticleSpawner {
         return basePlacementEffect(state);
     }
     private static ParticleEffect basePlacementEffect(BlockState state) {
-        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK)) return new BlockStateParticleEffect(PlacementParticleTypes.SNOWFLAKE, state);
+        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW))
+            return new BlockStateParticleEffect(PlacementParticleTypes.SNOWFLAKE, state);
         if (isRedstone(state)) return new BlockStateParticleEffect(PlacementParticleTypes.REDSTONE_DUST, state);
         if (state.isIn(BlockTags.LEAVES)) return new BlockStateParticleEffect(PlacementParticleTypes.LEAF, state);
+        if (isChain(state)) return new BlockStateParticleEffect(PlacementParticleTypes.CHAIN_SNAP, state);
+        if (isHeavyGrassBlade(state)) return new BlockStateParticleEffect(PlacementParticleTypes.HEAVY_GRASS_BLADE, state);
+        if (isSugarCane(state)) return new BlockStateParticleEffect(PlacementParticleTypes.SUGAR_CANE, state);
         if (isGrassBlade(state)) return new BlockStateParticleEffect(PlacementParticleTypes.GRASS_BLADE, state);
         if (state.isIn(BlockTags.FLOWERS)) return new BlockStateParticleEffect(PlacementParticleTypes.PETAL, state);
         if (state.isOf(Blocks.MOSS_BLOCK) || state.isOf(Blocks.MOSS_CARPET)) return new BlockStateParticleEffect(PlacementParticleTypes.MOSS_CLUMP, state);
@@ -153,12 +156,21 @@ public final class ParticleSpawner {
         return state.isOf(Blocks.REDSTONE_BLOCK) || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.REPEATER)
                 || state.isOf(Blocks.COMPARATOR) || state.isOf(Blocks.REDSTONE_TORCH) || state.isOf(Blocks.REDSTONE_WALL_TORCH);
     }
+    private static boolean isChain(BlockState state) {
+        return state.isOf(Blocks.CHAIN);
+    }
+    private static boolean isHeavyGrassBlade(BlockState state) {
+        return state.isOf(Blocks.COBWEB) || state.isOf(Blocks.TRIPWIRE) || state.isOf(Blocks.HANGING_ROOTS);
+    }
+    private static boolean isSugarCane(BlockState state) {
+        return state.isOf(Blocks.SUGAR_CANE) || state.isOf(Blocks.BAMBOO);
+    }
     private static boolean isGrassBlade(BlockState state) {
         return state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH) || state.isOf(Blocks.GRASS) || state.isOf(Blocks.TALL_GRASS)
                 || state.isOf(Blocks.FERN) || state.isOf(Blocks.LARGE_FERN) || state.isOf(Blocks.VINE) || state.isOf(Blocks.SWEET_BERRY_BUSH)
                 || state.isOf(Blocks.DEAD_BUSH) || state.isOf(Blocks.SEAGRASS) || state.isOf(Blocks.TALL_SEAGRASS) || state.isOf(Blocks.GLOW_LICHEN)
                 || state.isOf(Blocks.WHEAT) || state.isOf(Blocks.CARROTS) || state.isOf(Blocks.POTATOES) || state.isOf(Blocks.BEETROOTS)
-                || state.isOf(Blocks.MELON_STEM) || state.isOf(Blocks.PUMPKIN_STEM);
+                || state.isOf(Blocks.MELON_STEM) || state.isOf(Blocks.PUMPKIN_STEM) || state.isOf(Blocks.HAY_BLOCK);
     }
     private static boolean isDust(String path) {
         return path.equals("sand") || path.equals("red_sand") || path.equals("gravel") || path.equals("soul_sand") || path.equals("soul_soil")

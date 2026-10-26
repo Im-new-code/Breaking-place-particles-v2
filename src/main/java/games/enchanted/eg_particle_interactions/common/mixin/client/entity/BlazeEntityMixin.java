@@ -1,5 +1,32 @@
 package games.enchanted.eg_particle_interactions.common.mixin.client.entity;
-import games.enchanted.eg_particle_interactions.common.config.ConfigOptions; import games.enchanted.eg_particle_interactions.common.particle.ParticleSpawner; import net.minecraft.entity.Entity; import net.minecraft.entity.mob.BlazeEntity; import net.minecraft.particle.ParticleTypes; import net.minecraft.world.World; import org.spongepowered.asm.mixin.Mixin; import org.spongepowered.asm.mixin.injection.At; import org.spongepowered.asm.mixin.injection.Inject; import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-@Mixin(BlazeEntity.class) public abstract class BlazeEntityMixin {
- @Inject(method="tick()V",at=@At("TAIL")) private void egpi$blazeSparks(CallbackInfo ci){Entity e=(Entity)(Object)this;World w=e.world;if(ConfigOptions.get().enabled&&ConfigOptions.get().entityEffects&&w.isClient&&w.random.nextInt(12)==0)ParticleSpawner.spawnAt(w,ParticleTypes.SMALL_FLAME,e.getX()+(w.random.nextDouble()-.5)*.5,e.getY()+.4+w.random.nextDouble()*.6,e.getZ()+(w.random.nextDouble()-.5)*.5,0,.015,0);}
+
+import games.enchanted.eg_particle_interactions.common.config.ConfigOptions;
+import games.enchanted.eg_particle_interactions.common.particle.ParticleSpawner;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.mob.BlazeEntity;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(BlazeEntity.class)
+public abstract class BlazeEntityMixin {
+    @Inject(method = "tickMovement()V", at = @At("TAIL"))
+    private void egpi$blazeSparks(CallbackInfo ci) {
+        Entity entity = (Entity) (Object) this;
+        World world = entity.world;
+        ConfigOptions.Settings config = ConfigOptions.get();
+        if (config.enabled && config.entityEffects && world.isClient && world.random.nextInt(12) == 0) {
+            ParticleSpawner.spawnAt(
+                world,
+                ParticleTypes.SMALL_FLAME,
+                entity.getX() + (world.random.nextDouble() - 0.5) * 0.5,
+                entity.getY() + 0.4 + world.random.nextDouble() * 0.6,
+                entity.getZ() + (world.random.nextDouble() - 0.5) * 0.5,
+                0, 0.015, 0
+            );
+        }
+    }
 }

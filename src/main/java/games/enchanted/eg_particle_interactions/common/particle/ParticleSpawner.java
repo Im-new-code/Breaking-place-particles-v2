@@ -13,7 +13,6 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
@@ -26,8 +25,12 @@ public final class ParticleSpawner {
 
     private ParticleSpawner() {}
 
-    /** Spawns edge particles for a successful placement using the state passed to BlockItem.place. */
     public static void placed(World world, BlockPos pos, BlockState placedState) {
+        placed(world, pos, placedState, false);
+    }
+
+    /** Spawns edge particles for a successful placement using the state passed to BlockItem.place. */
+    public static void placed(World world, BlockPos pos, BlockState placedState, boolean waterAtTargetBeforePlacement) {
         if (world == null || !world.isClient || placedState == null || placedState.isAir()) return;
         ConfigOptions.Settings config = ConfigOptions.get();
         if (!config.enabled || !config.blockPlacement) return;
@@ -76,11 +79,13 @@ public final class ParticleSpawner {
             }
         });
 
-        // The upstream implementation also emits bubbles for block placements near/under water.
-        if (config.fluidEffects) spawnUnderwaterBubbles(world, pos);
+        // Only bubble if this exact target was underwater before placement or remains waterlogged.
+        if (config.fluidEffects &&
+                (waterAtTargetBeforePlacement || world.getFluidState(pos).isIn(FluidTags.WATER))) {
+            spawnUnderwaterBubbles(world, pos, waterAtTargetBeforePlacement || world.getFluidState(pos).isIn(FluidTags.WATER));
+        }
     }
 
-    /** Used by the bucket hook because liquid outline shapes are empty. */
     public static void fluidPlaced(World world, BlockPos pos, BlockState state) {
         if (world == null || !world.isClient || state == null || !state.getMaterial().isLiquid()) return;
         ConfigOptions.Settings config = ConfigOptions.get();
@@ -221,17 +226,9 @@ public final class ParticleSpawner {
         return new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
     }
 
-    private static boolean isUnderwater(World world, BlockPos pos) {
-        for (Direction direction : Direction.values()) {
-            if (world.getFluidState(pos.offset(direction)).isIn(FluidTags.WATER)) return true;
-        }
-        return world.getFluidState(pos).isIn(FluidTags.WATER);
-    }
-
-    private static void spawnUnderwaterBubbles(World world, BlockPos pos) {
-        if (!isUnderwater(world, pos)) return;
+    private static void spawnUnderwaterBubbles(World world, BlockPos pos, boolean alreadyUnderwater) {
         Random random = world.random;
-        int amount = world.getFluidState(pos).isIn(FluidTags.WATER) ? 8 : 4;
+        int amount = alreadyUnderwater ? 8 : 4;
         for (int i = 0; i < amount; i++) {
             double x = pos.getX() + 0.15 + random.nextDouble() * 0.7;
             double y = pos.getY() + 0.10 + random.nextDouble() * 0.7;

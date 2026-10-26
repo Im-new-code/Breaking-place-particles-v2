@@ -4,19 +4,19 @@ Clean-room Fabric backport of [Particle Interactions by Enchanted-Games](https:/
 
 ## Block placement particles
 
-Successful BlockItem placement-method calls are intercepted only after Minecraft reports that placement succeeded. Particles are sampled along the placed block's actual outline-shape edges, with outward velocity from the shape centre. The block state passed by Minecraft is used directly, so placement effects do not depend on the pre-placement state at the clicked face.
+Successful BlockItem placement-method calls are intercepted only after Minecraft reports that placement succeeded. The implementation reads the final block state at the target position and samples the state outline shape's edges, applying outward velocity from the shape centre.
 
-Block-specific pixel sprites are implemented for snow, leaves, petals/flowers, grass and crops, moss, sand/gravel/concrete powder, redstone devices including redstone blocks, and portal shatter effects where the state has a renderable shape. Other blocks fall back to vanilla block-state debris. Water and lava block-state placements receive fluid-specific bubble or lava particles.
+Block-specific particles cover snow/powder snow, leaves and azalea foliage, flowers and Nether/cave vines, grass and crops, cobweb/tripwire/hanging roots, sugar cane and bamboo, chains, moss, sand/gravel/concrete powder, redstone components including redstone blocks, and nether portals. Other blocks use vanilla block-state debris. Applicable block item placements use this same path.
 
-The previous modded block-break hook was removed from the active mixin list. Block breaking uses vanilla particles for now; the mod no longer adds its unrelated composter/XP-like grass particles on break.
+The previous modded block-break hook is removed from the active mixin list. Block breaking remains vanilla-only in this placement-focused build; it no longer adds the unrelated composter/XP-like grass particles from the previous implementation.
 
 ## Compatibility scope
 
-This is a placement-focused backport pass, not full parity with all modern Particle Interactions features. Modern resource-pack emitter rules, every custom particle animation, and the complete configuration UI have not been ported yet. Minecraft 1.17.1 content/APIs unavailable in modern versions is not included.
+This is a block-placement-focused backport, not full feature parity with all modern Particle Interactions features. Modern resource-pack emitter rules, every custom particle animation, custom fluid buckets, and the complete configuration UI have not been ported yet. Minecraft 1.17.1 content/APIs unavailable in that version are not included.
 
 ## Build
 
-The GitHub Actions workflow uses Java 16, Gradle 7.3.3, Loom 0.10, Yarn 1.17.1+build.65, Fabric Loader 0.14.24 and Fabric API 0.46.1+1.17. Run Gradle build; the mod JAR is produced in build/libs/.
+The GitHub Actions workflow uses Java 16, Gradle 7.3.3, Loom 0.10, Yarn 1.17.1+build.65, Fabric Loader 0.14.24 and Fabric API 0.46.1+1.17.
 
 ## Attribution and licence
 

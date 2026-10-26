@@ -131,7 +131,7 @@ public final class ParticleSpawner {
         return basePlacementEffect(state);
     }
     private static ParticleEffect placementEffect(BlockState state, Random random) {
-        if (state.isOf(Blocks.GRASS_BLOCK) && random.nextFloat() > 0.70F) {
+        if ((state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH)) && random.nextFloat() > 0.70F) {
             return new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.DIRT.getDefaultState());
         }
         return basePlacementEffect(state);
@@ -139,32 +139,35 @@ public final class ParticleSpawner {
     private static ParticleEffect basePlacementEffect(BlockState state) {
         if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW))
             return new BlockStateParticleEffect(PlacementParticleTypes.SNOWFLAKE, state);
+        if (state.isOf(Blocks.AZALEA) || state.isOf(Blocks.FLOWERING_AZALEA) || state.isIn(BlockTags.LEAVES))
+            return new BlockStateParticleEffect(PlacementParticleTypes.LEAF, state);
         if (isRedstone(state)) return new BlockStateParticleEffect(PlacementParticleTypes.REDSTONE_DUST, state);
-        if (state.isIn(BlockTags.LEAVES)) return new BlockStateParticleEffect(PlacementParticleTypes.LEAF, state);
         if (isChain(state)) return new BlockStateParticleEffect(PlacementParticleTypes.CHAIN_SNAP, state);
         if (isHeavyGrassBlade(state)) return new BlockStateParticleEffect(PlacementParticleTypes.HEAVY_GRASS_BLADE, state);
         if (isSugarCane(state)) return new BlockStateParticleEffect(PlacementParticleTypes.SUGAR_CANE, state);
+        if (isFlowerPetal(state)) return new BlockStateParticleEffect(PlacementParticleTypes.PETAL, state);
         if (isGrassBlade(state)) return new BlockStateParticleEffect(PlacementParticleTypes.GRASS_BLADE, state);
-        if (state.isIn(BlockTags.FLOWERS)) return new BlockStateParticleEffect(PlacementParticleTypes.PETAL, state);
         if (state.isOf(Blocks.MOSS_BLOCK) || state.isOf(Blocks.MOSS_CARPET)) return new BlockStateParticleEffect(PlacementParticleTypes.MOSS_CLUMP, state);
         String path = Registry.BLOCK.getId(state.getBlock()).getPath();
         if (isDust(path)) return new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, state);
         if (state.isOf(Blocks.NETHER_PORTAL)) return new BlockStateParticleEffect(PlacementParticleTypes.BLOCK_SHATTER, state);
         return new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
     }
+    private static boolean isFlowerPetal(BlockState state) {
+        return state.isIn(BlockTags.FLOWERS)
+                || state.isOf(Blocks.TWISTING_VINES) || state.isOf(Blocks.TWISTING_VINES_PLANT)
+                || state.isOf(Blocks.WEEPING_VINES) || state.isOf(Blocks.WEEPING_VINES_PLANT)
+                || state.isOf(Blocks.CAVE_VINES) || state.isOf(Blocks.CAVE_VINES_PLANT);
+    }
     private static boolean isRedstone(BlockState state) {
         return state.isOf(Blocks.REDSTONE_BLOCK) || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.REPEATER)
                 || state.isOf(Blocks.COMPARATOR) || state.isOf(Blocks.REDSTONE_TORCH) || state.isOf(Blocks.REDSTONE_WALL_TORCH);
     }
-    private static boolean isChain(BlockState state) {
-        return state.isOf(Blocks.CHAIN);
-    }
+    private static boolean isChain(BlockState state) { return state.isOf(Blocks.CHAIN); }
     private static boolean isHeavyGrassBlade(BlockState state) {
         return state.isOf(Blocks.COBWEB) || state.isOf(Blocks.TRIPWIRE) || state.isOf(Blocks.HANGING_ROOTS);
     }
-    private static boolean isSugarCane(BlockState state) {
-        return state.isOf(Blocks.SUGAR_CANE) || state.isOf(Blocks.BAMBOO);
-    }
+    private static boolean isSugarCane(BlockState state) { return state.isOf(Blocks.SUGAR_CANE) || state.isOf(Blocks.BAMBOO); }
     private static boolean isGrassBlade(BlockState state) {
         return state.isOf(Blocks.GRASS_BLOCK) || state.isOf(Blocks.DIRT_PATH) || state.isOf(Blocks.GRASS) || state.isOf(Blocks.TALL_GRASS)
                 || state.isOf(Blocks.FERN) || state.isOf(Blocks.LARGE_FERN) || state.isOf(Blocks.VINE) || state.isOf(Blocks.SWEET_BERRY_BUSH)
@@ -178,13 +181,13 @@ public final class ParticleSpawner {
     }
     private static int placementDensity(BlockState state) {
         if (isRedstone(state) || state.isOf(Blocks.NETHER_PORTAL)) return 3;
-        if (state.isIn(BlockTags.FLOWERS)) return 3;
+        if (isFlowerPetal(state)) return 3;
         return 2;
     }
     private static double placementVelocity(BlockState state) {
         if (state.isOf(Blocks.NETHER_PORTAL)) return 0.18;
         if (isRedstone(state)) return 0.10;
-        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK)) return 0.15;
+        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) return 0.15;
         if (isGrassBlade(state) || state.isIn(BlockTags.LEAVES)) return 0.13;
         if (isDust(Registry.BLOCK.getId(state.getBlock()).getPath())) return 0.10;
         return 0.13;

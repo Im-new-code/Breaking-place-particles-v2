@@ -49,14 +49,16 @@ public final class ParticleSpawner {
             // dropping the effect when the edge sampler has no geometry.
             if (isRedstone(placedState) && config.redstoneEffects) {
                 for (int i = 0; i < count(config, 4); i++) {
-                    double x = pos.getX() + 0.18 + randomParticle(world) * 0.64;
-                    double z = pos.getZ() + 0.18 + randomParticle(world) * 0.64;
-                    double y = pos.getY() + 0.025 + randomParticle(world) * 0.035;
-                    double vx = (randomParticle(world) - 0.5) * 0.045;
-                    double vz = (randomParticle(world) - 0.5) * 0.045;
+                    double px = 0.18 + randomParticle(world) * 0.64;
+                    double pz = 0.18 + randomParticle(world) * 0.64;
+                    double py = 0.025 + randomParticle(world) * 0.035;
+                    double velocityMultiplier = placementVelocity(placedState);
+                    double vx = (px - 0.5) * velocityMultiplier;
+                    double vy = (py - 0.5) * velocityMultiplier;
+                    double vz = (pz - 0.5) * velocityMultiplier;
                     spawnAt(world,
                             new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, placedState),
-                            x, y, z, vx, 0.015 + randomParticle(world) * 0.025, vz);
+                            pos.getX() + px, pos.getY() + py, pos.getZ() + pz, vx, vy, vz);
                 }
             }
             return;

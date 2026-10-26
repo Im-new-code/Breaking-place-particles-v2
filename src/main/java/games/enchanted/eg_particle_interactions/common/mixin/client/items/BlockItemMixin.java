@@ -38,6 +38,12 @@ public abstract class BlockItemMixin {
         if (!cir.getReturnValueZ()) return;
         World world = context.getWorld();
         BlockPos pos = context.getBlockPos();
-        ParticleSpawner.placed(world, pos, placedState, wasUnderwater);
+
+        // Read the final client-side state after placement. Some block items
+        // normalize properties during placement; using the original candidate
+        // state can select/tint a particle from the wrong state.
+        BlockState actualState = world.getBlockState(pos);
+        if (actualState.isAir()) actualState = placedState;
+        ParticleSpawner.placed(world, pos, actualState, wasUnderwater);
     }
 }

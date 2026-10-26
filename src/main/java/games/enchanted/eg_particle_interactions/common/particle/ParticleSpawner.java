@@ -62,10 +62,6 @@ public final class ParticleSpawner {
             return;
         }
 
-        Box bounds = shape.getBoundingBox();
-        double centerX = (bounds.minX + bounds.maxX) * 0.5;
-        double centerY = (bounds.minY + bounds.maxY) * 0.5;
-        double centerZ = (bounds.minZ + bounds.maxZ) * 0.5;
         Random random = world.random;
 
         int density = placementDensity(placedState);
@@ -90,9 +86,11 @@ public final class ParticleSpawner {
                 ParticleEffect effect = placementEffect(world, pos, stateForParticles, random, config);
                 if (effect == null) continue;
 
-                double vx = (px - centerX) * velocityMultiplier + (random.nextDouble() - 0.5) * 0.004;
-                double vy = (py - centerY) * velocityMultiplier + 0.002 + random.nextDouble() * 0.008;
-                double vz = (pz - centerZ) * velocityMultiplier + (random.nextDouble() - 0.5) * 0.004;
+                // Match upstream Particle Interactions: velocity points outward
+                // from the block centre, with no extra upward impulse.
+                double vx = (px - 0.5) * velocityMultiplier;
+                double vy = (py - 0.5) * velocityMultiplier;
+                double vz = (pz - 0.5) * velocityMultiplier;
                 spawnAt(world, effect, pos.getX() + px, pos.getY() + py, pos.getZ() + pz, vx, vy, vz);
             }
         });

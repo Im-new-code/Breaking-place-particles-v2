@@ -1,10 +1,6 @@
-Particle Interactions — Minecraft 1.17.1 backport
-
-Original work: Particle Interactions by Enchanted-Games
-Original source: https://github.com/Enchanted-Games/block-place-particles
+Adaptation/backport of Particle Interactions by Enchanted-Games.
+Original project: https://github.com/Enchanted-Games/block-place-particles
 Original licence: Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 Licence text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
 
-Adaptation notice: this repository contains an independently organized Minecraft 1.17.1 compatibility implementation inspired by the original project's documented features. The 1.17.1 implementation uses older Yarn/Fabric APIs and vanilla particle substitutes where modern-only game content or APIs are unavailable. The original project and its author are not represented as endorsing this adaptation.
-
-CC BY-NC 4.0 requires attribution and does not permit commercial use of the licensed material. Read the complete licence at the link above before redistributing or adapting the original project's protected material.
+This derivative must retain attribution and may not be used commercially under the original licence. The original author does not necessarily endorse this adaptation.

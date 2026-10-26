@@ -26,6 +26,7 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
     }
 
     private final Kind kind;
+    private final SpriteProvider spriteProvider;
     private final boolean fallingPetalMotion;
     private final boolean floatingDustMotion;
     private final float spinAcceleration;
@@ -37,6 +38,7 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
                                    BlockState state, SpriteProvider sprites, Kind kind) {
         super(world, x, y, z, velocityX, velocityY, velocityZ);
         this.kind = kind;
+        this.spriteProvider = sprites;
         this.fallingPetalMotion = isFallingPetalKind(kind);
         this.floatingDustMotion = kind == Kind.TINTED_DUST || kind == Kind.REDSTONE_DUST;
 
@@ -55,7 +57,9 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
                 ? (float) Math.toRadians(this.random.nextBoolean() ? -5.0F : 5.0F)
                 : 0.0F;
 
-        scale(size(kind, this.random));
+        // Upstream assigns the target size directly; scale() in 1.17.1
+        // multiplies the default size instead of setting it.
+        this.scale = size(kind, this.random);
 
         int color = colorFor(state, world, x, y, z, kind);
         setColor(((color >> 16) & 255) / 255.0F,
@@ -89,6 +93,9 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
         }
 
         if (this.floatingDustMotion) {
+            // Upstream FloatingColouredDust advances through its sprite frames
+            // according to particle age rather than keeping one random frame.
+            setSpriteForAge(this.spriteProvider);
             this.velocityX *= 0.95;
             this.velocityY *= 0.90;
             this.velocityZ *= 0.95;

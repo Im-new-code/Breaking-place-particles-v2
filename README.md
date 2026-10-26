@@ -6,7 +6,7 @@ Clean-room Fabric backport of [Particle Interactions by Enchanted-Games](https:/
 
 Successful BlockItem placement-method calls are intercepted only after Minecraft reports that placement succeeded. The implementation reads the final block state at the target position and samples the state outline shape's edges, applying outward velocity from the shape centre.
 
-Block-specific particles cover snow/powder snow, leaves and azalea foliage, flowers and Nether/cave vines, grass and crops, cobweb/tripwire/hanging roots, sugar cane and bamboo, chains, moss, sand/gravel/concrete powder, redstone components including redstone blocks, and nether portals. Other blocks use vanilla block-state debris. Applicable block item placements use this same path.
+Specialized sprites cover snow/powder snow, leaves and azalea foliage, flowers and Nether/cave vines, plant-like grass and crops, cobweb/tripwire/hanging roots, sugar cane and bamboo, chains, moss, sand/gravel/concrete powder, redstone wire, and nether portals. Solid grass blocks, dirt paths, hay bales, redstone blocks, and redstone devices use vanilla block-state particles so debris matches their actual model textures. Block-item placements read the final client-side state after placement, avoiding stale candidate-state textures.
 
 The previous modded block-break hook is removed from the active mixin list. Block breaking remains vanilla-only in this placement-focused build; it no longer adds the unrelated composter/XP-like grass particles from the previous implementation.
 

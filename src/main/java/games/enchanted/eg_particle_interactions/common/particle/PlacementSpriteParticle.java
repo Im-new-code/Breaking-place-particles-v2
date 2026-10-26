@@ -45,7 +45,6 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
 
         float baseGravity = 0.25F + this.random.nextFloat() * 0.13F;
         this.gravityStrength = baseGravity * gravityMultiplier(kind);
-        this.friction = 1.0F;
         // Upstream particles collide with blocks, so they settle naturally.
         this.collidesWithWorld = true;
 
@@ -94,8 +93,12 @@ public final class PlacementSpriteParticle extends SpriteBillboardParticle {
             this.velocityY *= 0.90;
             this.velocityZ *= 0.95;
             this.gravityStrength *= 0.98F;
-            this.friction *= 0.995F;
             super.tick();
+            // 1.17.1 lacks the modern Particle.friction field. Apply the
+            // upstream 0.995 damping directly after vanilla's movement.
+            this.velocityX *= 0.995;
+            this.velocityY *= 0.995;
+            this.velocityZ *= 0.995;
             return;
         }
 

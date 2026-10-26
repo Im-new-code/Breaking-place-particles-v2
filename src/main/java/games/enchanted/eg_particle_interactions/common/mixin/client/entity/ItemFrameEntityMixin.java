@@ -21,7 +21,7 @@ public abstract class ItemFrameEntityMixin {
         Entity entity = (Entity) (Object) this;
         World world = entity.world;
         ConfigOptions.Settings config = ConfigOptions.get();
-        if (config.enabled && config.entityEffects && world.isClient && update && world.random.nextInt(3) == 0) {
+        if (config.enabled && config.entityEffects && world.isClient && world.random.nextInt(3) == 0) {
             BlockState displayedState = stack != null && stack.getItem() instanceof BlockItem
                     ? ((BlockItem) stack.getItem()).getBlock().getDefaultState()
                     : Blocks.SAND.getDefaultState();

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "eg_particle_interactions",
+  "version": "${version}",
+  "name": "Particle Interactions (1.17.1 Backport)",
+  "description": "Client-side block and entity interaction particles, adapted for Minecraft 1.17.1.",
+  "authors": ["Enchanted-Games (original project)", "Im-new-code (1.17.1 compatibility port)"],
+  "contact": {
+    "homepage": "https://github.com/Enchanted-Games/block-place-particles",
+    "sources": "https://github.com/Im-new-code/Breaking-place-particles-v2",
+    "issues": "https://github.com/Im-new-code/Breaking-place-particles-v2/issues"
+  },
+  "license": "CC-BY-NC-4.0",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["games.enchanted.eg_particle_interactions.fabric.FabricClientEntry"]
+  },
+  "mixins": ["mixins.client.eg_particle_interactions.json"],
+  "depends": {
+    "fabricloader": ">=0.12.0",
+    "minecraft": "1.17.1",
+    "java": ">=16",
+    "fabric-api": "*"
+  }
+}

@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ClientPlayerInteractionManager.class)
 public abstract class RedstonePlacementMixin {
     @Unique private boolean egpi$redstoneInHand;
+    @Unique private BlockState egpi$clickedState;
 
     @Inject(
         method = "interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;",
@@ -30,6 +31,7 @@ public abstract class RedstonePlacementMixin {
                                       BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = player.getStackInHand(hand);
         this.egpi$redstoneInHand = "item.minecraft.redstone".equals(stack.getTranslationKey());
+        this.egpi$clickedState = world.getBlockState(hit.getBlockPos());
     }
 
     @Inject(
@@ -39,11 +41,18 @@ public abstract class RedstonePlacementMixin {
     private void egpi$redstoneDustPlacement(ClientPlayerEntity player, ClientWorld world, Hand hand,
                                             BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
         boolean wasRedstone = this.egpi$redstoneInHand;
+        BlockState clickedState = this.egpi$clickedState;
         this.egpi$redstoneInHand = false;
-        if (!wasRedstone || cir.getReturnValue() == null || !cir.getReturnValue().isAccepted()) return;
+        this.egpi$clickedState = null;
+
+        boolean accepted = cir.getReturnValue() != null && cir.getReturnValue().isAccepted();
+        if (accepted && clickedState != null && egpi$isInteractiveRedstone(clickedState)) {
+            ParticleSpawner.redstoneInteraction(world, hit.getBlockPos(), clickedState, hit.getPos(), hit.getSide());
+        }
+        if (!wasRedstone || !accepted) return;
 
         BlockPos clicked = hit.getBlockPos();
-        BlockState clickedState = world.getBlockState(clicked);
+        clickedState = world.getBlockState(clicked);
         BlockPos target = clickedState.getMaterial().isReplaceable() ? clicked : clicked.offset(hit.getSide());
 
         BlockState wire = Blocks.REDSTONE_WIRE.getDefaultState();
@@ -55,5 +64,10 @@ public abstract class RedstonePlacementMixin {
         } else if (hit.getSide() == Direction.UP && wire.canPlaceAt(world, clicked.up())) {
             ParticleSpawner.placed(world, clicked.up(), wire);
         }
+    }
+    @Unique private static boolean egpi$isInteractiveRedstone(BlockState state) {
+        return state.isOf(Blocks.REPEATER) || state.isOf(Blocks.COMPARATOR)
+                || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.REDSTONE_TORCH)
+                || state.isOf(Blocks.REDSTONE_WALL_TORCH) || state.isOf(Blocks.LEVER);
     }
 }

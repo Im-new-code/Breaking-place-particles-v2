@@ -1,10 +1,12 @@
 package games.enchanted.eg_particle_interactions.common.particle;
 
 import games.enchanted.eg_particle_interactions.common.config.ConfigOptions;
+import games.enchanted.eg_particle_interactions.common.replay.ReplayModCompatibility;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.Material;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.item.ItemUsageContext;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleEffect;
@@ -13,6 +15,8 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
@@ -143,6 +147,42 @@ public final class ParticleSpawner {
         }
     }
 
+    /** Upstream-style tool particles launched from the precise clicked face. */
+    public static void tool(ItemUsageContext context, BlockState state, ToolAction action) {
+        tool(context, state, state, action);
+    }
+
+    /** Axe variant uses mostly original-log debris and occasional stripped-state debris. */
+    public static void tool(ItemUsageContext context, BlockState beforeState, BlockState afterState, ToolAction action) {
+        if (context == null) return;
+        World world = context.getWorld();
+        ConfigOptions.Settings config = ConfigOptions.get();
+        if (world == null || !world.isClient || !config.enabled || !config.toolInteractions) return;
+
+        if (action != ToolAction.TILL && action != ToolAction.STRIP && action != ToolAction.FLATTEN) {
+            tool(world, context.getBlockPos(), afterState, action);
+            return;
+        }
+
+        Random random = world.random;
+        Vec3d hit = context.getHitPos();
+        Direction face = context.getSide();
+        for (int i = 0; i < count(config, 5); i++) {
+            double offsetX = (random.nextDouble() - 0.5) * 0.5 * (1 - face.getOffsetX());
+            double offsetY = (random.nextDouble() - 0.5) * 0.5 * (1 - face.getOffsetY());
+            double offsetZ = (random.nextDouble() - 0.5) * 0.5 * (1 - face.getOffsetZ());
+            BlockState particleState = afterState;
+            if (action == ToolAction.STRIP && beforeState != null && random.nextFloat() <= 0.9F) {
+                particleState = beforeState;
+            }
+            spawnAt(world, new BlockStateParticleEffect(ParticleTypes.BLOCK, particleState),
+                    hit.x + offsetX, hit.y + offsetY, hit.z + offsetZ,
+                    face.getOffsetX() + (random.nextDouble() - 0.5),
+                    face.getOffsetY() + (random.nextDouble() - 0.5),
+                    face.getOffsetZ() + (random.nextDouble() - 0.5));
+        }
+    }
+
     public static void campfire(World world, BlockPos pos) {
         if (!enabled(world, true)) return;
         Random random = world.random;
@@ -169,6 +209,22 @@ public final class ParticleSpawner {
                 pos.getZ() + 0.2 + random.nextDouble() * 0.6, 0, 0.01, 0);
     }
 
+    /** Custom tinted-dust burst when a redstone control is successfully used. */
+    public static void redstoneInteraction(World world, BlockPos pos, BlockState state, Vec3d hit, Direction face) {
+        if (!enabled(world, false) || state == null || state.isAir() || hit == null || face == null) return;
+        Random random = world.random;
+        ParticleEffect dust = new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, state);
+        for (int i = 0; i < count(ConfigOptions.get(), 4); i++) {
+            double offsetX = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetX()));
+            double offsetY = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetY()));
+            double offsetZ = (random.nextDouble() - 0.5) * 0.055 * (1 - Math.abs(face.getOffsetZ()));
+            spawnAt(world, dust, hit.x + offsetX, hit.y + offsetY, hit.z + offsetZ,
+                    face.getOffsetX() * 0.035 + (random.nextDouble() - 0.5) * 0.025,
+                    face.getOffsetY() * 0.035 + (random.nextDouble() - 0.5) * 0.025,
+                    face.getOffsetZ() * 0.035 + (random.nextDouble() - 0.5) * 0.025);
+        }
+    }
+
     public static void spark(World world, double x, double y, double z) {
         if (!enabled(world, false)) return;
         Random random = world.random;
@@ -187,13 +243,25 @@ public final class ParticleSpawner {
     }
 
     public static void itemFrame(World world, double x, double y, double z) {
+        itemFrame(world, x, y, z, Blocks.SAND.getDefaultState());
+    }
+
+    /** Item-frame dust uses the displayed block's tint when the item is a block. */
+    public static void itemFrame(World world, double x, double y, double z, BlockState displayedState) {
         if (!enabled(world, false)) return;
         Random random = world.random;
-        spawnAt(world,
-                new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, Blocks.SAND.getDefaultState()),
-                x, y, z,
-                (random.nextDouble() - 0.5) * 0.018, 0.005 + random.nextDouble() * 0.01,
-                (random.nextDouble() - 0.5) * 0.018);
+        BlockState tintState = displayedState == null || displayedState.isAir()
+                ? Blocks.SAND.getDefaultState() : displayedState;
+        ParticleEffect dust = new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, tintState);
+        for (int i = 0; i < count(ConfigOptions.get(), 3); i++) {
+            spawnAt(world, dust,
+                    x + (random.nextDouble() - 0.5) * 0.10,
+                    y + (random.nextDouble() - 0.5) * 0.10,
+                    z + (random.nextDouble() - 0.5) * 0.10,
+                    (random.nextDouble() - 0.5) * 0.035,
+                    0.005 + random.nextDouble() * 0.015,
+                    (random.nextDouble() - 0.5) * 0.035);
+        }
     }
 
     private static boolean enabled(World world, boolean fire) {
@@ -204,9 +272,12 @@ public final class ParticleSpawner {
 
     public static void spawnAt(World world, ParticleEffect particle, double x, double y, double z,
                                double vx, double vy, double vz) {
-        if (world != null && world.isClient && particle != null) {
-            world.addParticle(particle, x, y, z, vx, vy, vz);
-        }
+        if (world == null || !world.isClient || particle == null) return;
+        // During replay, the packet stream restores these events. Suppress
+        // local re-triggers to avoid duplicate and newly randomized particles.
+        if (ReplayModCompatibility.isReplayPlayback()) return;
+        ReplayModCompatibility.recordParticle(particle, x, y, z, vx, vy, vz);
+        world.addParticle(particle, x, y, z, vx, vy, vz);
     }
 
     public static ParticleEffect visualFor(BlockState state) {

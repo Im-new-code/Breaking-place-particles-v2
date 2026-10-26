@@ -5,6 +5,9 @@ import games.enchanted.eg_particle_interactions.common.particle.ParticleSpawner;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.BlockItem;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,8 +21,11 @@ public abstract class ItemFrameEntityMixin {
         Entity entity = (Entity) (Object) this;
         World world = entity.world;
         ConfigOptions.Settings config = ConfigOptions.get();
-        if (config.enabled && config.entityEffects && world.isClient && world.random.nextInt(3) == 0) {
-            ParticleSpawner.itemFrame(world, entity.getX(), entity.getY() + 0.1, entity.getZ());
+        if (config.enabled && config.entityEffects && world.isClient && update && world.random.nextInt(3) == 0) {
+            BlockState displayedState = stack != null && stack.getItem() instanceof BlockItem
+                    ? ((BlockItem) stack.getItem()).getBlock().getDefaultState()
+                    : Blocks.SAND.getDefaultState();
+            ParticleSpawner.itemFrame(world, entity.getX(), entity.getY() + 0.1, entity.getZ(), displayedState);
         }
     }
 }

@@ -187,7 +187,13 @@ public final class ParticleSpawner {
     }
 
     public static void itemFrame(World world, double x, double y, double z) {
-        if (enabled(world, false)) spawnAt(world, ParticleTypes.CLOUD, x, y, z, 0, 0.003, 0);
+        if (!enabled(world, false)) return;
+        Random random = world.random;
+        spawnAt(world,
+                new BlockStateParticleEffect(PlacementParticleTypes.TINTED_DUST, Blocks.SAND.getDefaultState()),
+                x, y, z,
+                (random.nextDouble() - 0.5) * 0.018, 0.005 + random.nextDouble() * 0.01,
+                (random.nextDouble() - 0.5) * 0.018);
     }
 
     private static boolean enabled(World world, boolean fire) {

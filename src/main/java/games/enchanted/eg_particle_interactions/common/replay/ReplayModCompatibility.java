@@ -4,6 +4,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
 import net.minecraft.particle.ParticleEffect;
 
@@ -90,7 +91,7 @@ public final class ReplayModCompatibility {
         if (world == null) return;
 
         long tick = world.getTime();
-        BlockPos pos = BlockPos.ofFloored(packet.getX(), packet.getY(), packet.getZ()).toImmutable();
+        BlockPos pos = new BlockPos(MathHelper.floor(packet.getX()), MathHelper.floor(packet.getY()), MathHelper.floor(packet.getZ())).toImmutable();
         recentReplayParticlePositions.put(pos, tick);
         if (recentReplayParticlePositions.size() > 4096) {
             for (Map.Entry<BlockPos, Long> entry : recentReplayParticlePositions.entrySet()) {

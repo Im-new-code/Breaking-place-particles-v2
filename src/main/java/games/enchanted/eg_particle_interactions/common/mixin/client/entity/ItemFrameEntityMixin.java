@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,7 +59,7 @@ public abstract class ItemFrameEntityMixin {
         BlockState displayedState = stack != null && !stack.isEmpty() && stack.getItem() instanceof BlockItem
                 ? ((BlockItem) stack.getItem()).getBlock().getDefaultState()
                 : Blocks.SAND.getDefaultState();
-        BlockPos framePos = BlockPos.ofFloored(entity.getX(), entity.getY(), entity.getZ());
+        BlockPos framePos = new BlockPos(MathHelper.floor(entity.getX()), MathHelper.floor(entity.getY()), MathHelper.floor(entity.getZ()));
 
         if (replay) {
             if (ReplayModCompatibility.hasRecentReplayParticle(framePos)) {

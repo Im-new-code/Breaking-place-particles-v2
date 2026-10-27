@@ -20,7 +20,12 @@
     "entity.AbstractMinecartEntityMixin",
     "entity.BlazeEntityMixin",
     "entity.FallingBlockEntityMixin",
-    "entity.ItemFrameEntityMixin"
+    "entity.ItemFrameEntityMixin",
+    "blocks.RepeaterBlockMixin",
+    "blocks.ComparatorBlockMixin",
+    "replay.ReplayBlockUpdateMixin"
   ],
-  "injectors": { "defaultRequire": 1 }
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

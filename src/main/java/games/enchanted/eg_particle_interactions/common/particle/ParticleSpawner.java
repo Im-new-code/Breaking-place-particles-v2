@@ -156,17 +156,25 @@ public final class ParticleSpawner {
     public static void tool(ItemUsageContext context, BlockState beforeState, BlockState afterState, ToolAction action) {
         if (context == null) return;
         World world = context.getWorld();
-        ConfigOptions.Settings config = ConfigOptions.get();
-        if (world == null || !world.isClient || !config.enabled || !config.toolInteractions) return;
-
+        if (world == null) return;
         if (action != ToolAction.TILL && action != ToolAction.STRIP && action != ToolAction.FLATTEN) {
             tool(world, context.getBlockPos(), afterState, action);
             return;
         }
+        toolAt(world, context.getBlockPos(), beforeState, afterState, action, context.getHitPos(), context.getSide());
+    }
 
+    /** Shared click-face particle burst used by live item use and replay fallback. */
+    public static void toolAt(World world, BlockPos pos, BlockState beforeState, BlockState afterState,
+                              ToolAction action, Vec3d hit, Direction face) {
+        ConfigOptions.Settings config = ConfigOptions.get();
+        if (world == null || !world.isClient || !config.enabled || !config.toolInteractions
+                || pos == null || afterState == null || hit == null || face == null) return;
+        if (action != ToolAction.TILL && action != ToolAction.STRIP && action != ToolAction.FLATTEN) {
+            tool(world, pos, afterState, action);
+            return;
+        }
         Random random = world.random;
-        Vec3d hit = context.getHitPos();
-        Direction face = context.getSide();
         for (int i = 0; i < count(config, 5); i++) {
             double offsetX = (random.nextDouble() - 0.5) * 0.5 * (1 - face.getOffsetX());
             double offsetY = (random.nextDouble() - 0.5) * 0.5 * (1 - face.getOffsetY());
@@ -261,7 +269,7 @@ public final class ParticleSpawner {
                     y + (random.nextDouble() - 0.5) * 0.10,
                     z + (random.nextDouble() - 0.5) * 0.10,
                     (random.nextDouble() - 0.5) * 0.035,
-                    0.005 + random.nextDouble() * 0.015,
+                    (random.nextDouble() - 0.5) * 0.025,
                     (random.nextDouble() - 0.5) * 0.035);
         }
     }
@@ -272,13 +280,67 @@ public final class ParticleSpawner {
         return config.enabled && (fire ? config.fireAndFurnaces : config.entityEffects);
     }
 
+    /**
+     * Replay-only fallback for interaction effects missing from older .mcpr files.
+     * State changes are authoritative, so this does not depend on recorded input.
+     */
+    public static void replayBlockChange(ClientWorld world, BlockPos pos, BlockState before, BlockState after) {
+        if (world == null || pos == null || before == null || after == null
+                || !ReplayModCompatibility.isReplayPlayback() || before.equals(after)
+                || ReplayModCompatibility.hasRecentReplayParticle(pos)) return;
+        withReplayParticleReconstruction(() -> {
+            if (before.isAir() && !after.isAir()) {
+                placed(world, pos, after);
+                return;
+            }
+            Vec3d topCenter = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.99, pos.getZ() + 0.5);
+            if (after.isOf(Blocks.FARMLAND)
+                    && (before.isOf(Blocks.GRASS_BLOCK) || before.isOf(Blocks.DIRT) || before.isOf(Blocks.COARSE_DIRT))) {
+                toolAt(world, pos, before, after, ToolAction.TILL, topCenter, Direction.UP);
+                return;
+            }
+            if (after.isOf(Blocks.DIRT_PATH)
+                    && (before.isOf(Blocks.GRASS_BLOCK) || before.isOf(Blocks.DIRT) || before.isOf(Blocks.COARSE_DIRT))) {
+                toolAt(world, pos, before, after, ToolAction.FLATTEN, topCenter, Direction.UP);
+                return;
+            }
+            boolean repeaterDelayChanged = before.isOf(Blocks.REPEATER) && after.isOf(Blocks.REPEATER)
+                    && !before.get(net.minecraft.block.RepeaterBlock.DELAY).equals(after.get(net.minecraft.block.RepeaterBlock.DELAY));
+            boolean comparatorModeChanged = before.isOf(Blocks.COMPARATOR) && after.isOf(Blocks.COMPARATOR)
+                    && !before.get(net.minecraft.block.ComparatorBlock.MODE).equals(after.get(net.minecraft.block.ComparatorBlock.MODE));
+            if (repeaterDelayChanged || comparatorModeChanged) {
+                redstoneInteraction(world, pos, after, topCenter, Direction.UP);
+            }
+        });
+    }
+
+    /** Replay fallback for item-frame updates in older recordings. */
+    public static void replayItemFrame(World world, double x, double y, double z, BlockState displayedState,
+                                       BlockPos framePos) {
+        if (world == null || framePos == null || !ReplayModCompatibility.isReplayPlayback()
+                || ReplayModCompatibility.hasRecentReplayParticle(framePos)) return;
+        withReplayParticleReconstruction(() -> itemFrame(world, x, y, z, displayedState));
+    }
+
+    private static final ThreadLocal<Boolean> REPLAY_PARTICLE_RECONSTRUCTION =
+            ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+    private static void withReplayParticleReconstruction(Runnable task) {
+        boolean previous = REPLAY_PARTICLE_RECONSTRUCTION.get();
+        REPLAY_PARTICLE_RECONSTRUCTION.set(Boolean.TRUE);
+        try {
+            task.run();
+        } finally {
+            REPLAY_PARTICLE_RECONSTRUCTION.set(previous);
+        }
+    }
+
     public static void spawnAt(World world, ParticleEffect particle, double x, double y, double z,
                                double vx, double vy, double vz) {
         if (world == null || !world.isClient || particle == null) return;
-        // During replay, the packet stream restores these events. Suppress
-        // local re-triggers to avoid duplicate and newly randomized particles.
-        if (ReplayModCompatibility.isReplayPlayback()) return;
-        ReplayModCompatibility.recordParticle(particle, x, y, z, vx, vy, vz);
+        boolean replay = ReplayModCompatibility.isReplayPlayback();
+        if (replay && !REPLAY_PARTICLE_RECONSTRUCTION.get()) return;
+        if (!replay) ReplayModCompatibility.recordParticle(particle, x, y, z, vx, vy, vz);
         world.addParticle(particle, x, y, z, vx, vy, vz);
     }
 

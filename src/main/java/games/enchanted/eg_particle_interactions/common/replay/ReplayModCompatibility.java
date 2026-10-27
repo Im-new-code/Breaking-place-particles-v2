@@ -1,11 +1,16 @@
 package games.enchanted.eg_particle_interactions.common.replay;
 
 import net.minecraft.network.Packet;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
 import net.minecraft.particle.ParticleEffect;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Optional ReplayMod bridge. Reflection keeps ReplayMod a soft dependency.
@@ -28,6 +33,7 @@ public final class ReplayModCompatibility {
     private static Method savePacket;
     private static Field replayInstance;
     private static Method getReplayHandler;
+    private static final Map<BlockPos, Long> recentReplayParticlePositions = new ConcurrentHashMap<>();
 
     private ReplayModCompatibility() {}
 
@@ -75,6 +81,40 @@ public final class ReplayModCompatibility {
             warn("Could not query ReplayMod playback state; local particles remain enabled.");
             return false;
         }
+    }
+
+    /** Remember a particle packet seen during playback so fallback hooks do not double-spawn it. */
+    public static void noteReplayParticle(ParticleS2CPacket packet) {
+        if (packet == null || !isReplayPlayback()) return;
+        ClientWorld world = MinecraftClient.getInstance().world;
+        if (world == null) return;
+
+        long tick = world.getTime();
+        BlockPos pos = BlockPos.ofFloored(packet.getX(), packet.getY(), packet.getZ()).toImmutable();
+        recentReplayParticlePositions.put(pos, tick);
+        if (recentReplayParticlePositions.size() > 4096) {
+            for (Map.Entry<BlockPos, Long> entry : recentReplayParticlePositions.entrySet()) {
+                long age = tick - entry.getValue();
+                if (age < 0 || age > 3) recentReplayParticlePositions.remove(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    /** True if ReplayMod has recently played a particle at or next to this block. */
+    public static boolean hasRecentReplayParticle(BlockPos pos) {
+        if (pos == null || !isReplayPlayback()) return false;
+        ClientWorld world = MinecraftClient.getInstance().world;
+        if (world == null) return false;
+        long now = world.getTime();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    Long tick = recentReplayParticlePositions.get(pos.add(dx, dy, dz));
+                    if (tick != null && now >= tick && now - tick <= 2) return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** Save one exact particle event into an active ReplayMod recording, if present. */

@@ -10,11 +10,11 @@ Custom Particle Interactions-style sprites cover snow/powder snow, leaves and az
 
 The previous modded block-break hook is removed from the active mixin list. Block breaking remains vanilla-only in this placement-focused build; it no longer adds the unrelated composter/XP-like grass particles from the previous implementation.
 
-Hoe, shovel, and axe effects now spawn around the actual clicked face with the upstream-style outward impulse. Successful repeater/comparator/redstone-control interactions emit custom tinted-dust particles, and item-frame changes use the displayed block's tint when possible.
+Hoe, shovel, and axe effects spawn around the actual clicked face with the upstream-style outward impulse. Successful repeater-delay and comparator-mode interactions emit custom tinted-dust particles. Item frames emit dust when the player inserts an item or rotates it; replay playback also watches the item/rotation tracked-data updates, using the displayed block's tint where possible.
 
 ## ReplayMod compatibility
 
-ReplayMod is an optional soft dependency. While ReplayMod recording is active, particles created by this client-side mod are also saved as timestamped particle packets in ReplayMod's existing recording stream. During replay playback/export, locally re-triggered effects are suppressed so the recorded events are not duplicated; saved packets recreate the particles at the recorded time. This uses reflection and adds no compile-time ReplayMod dependency.
+ReplayMod is an optional soft dependency. While recording, particles are saved as timestamped particle packets in ReplayMod's existing stream. During playback, those packets are detected to avoid duplicate effects. For older replays that do not contain these particle packets, client-side block-state and item-frame updates reconstruct placement, hoe/shovel, repeater/comparator, and item-frame effects. Replay detection uses reflection; there is no compile-time ReplayMod dependency.
 
 ## Compatibility scope
 
